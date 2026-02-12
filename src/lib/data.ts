@@ -365,6 +365,114 @@ export function getMarginsByState(
     .sort((a, b) => b.margemMedia - a.margemMedia);
 }
 
+const AMAZON_STATES = new Set([
+  'AMAZONAS', 'PARA', 'ACRE', 'AMAPA', 'RONDONIA', 'RORAIMA', 'TOCANTINS',
+]);
+
+export interface AmazonMetrics {
+  label: string;
+  value: number;
+  national: number;
+  diff: number; // percentage difference vs national
+}
+
+export interface AmazonStateDetail {
+  estado: string;
+  postos: number;
+  precoMedio: number;
+  margemMedia: number;
+  coefVariacao: number;
+}
+
+export interface AmazonAnalysis {
+  metrics: AmazonMetrics[];
+  states: AmazonStateDetail[];
+}
+
+export function getAmazonAnalysis(data: GasPrice[], produto?: string): AmazonAnalysis {
+  const maxDate = Math.max(...data.map((d) => d.dataInicial.getTime()));
+  const oneYearAgo = maxDate - 365 * 24 * 60 * 60 * 1000;
+  let recentData = data.filter((d) => d.dataInicial.getTime() >= oneYearAgo);
+
+  if (produto && produto !== 'all') {
+    recentData = recentData.filter((d) => d.produto === produto);
+  }
+
+  const amazonData = recentData.filter((d) => AMAZON_STATES.has(d.estado));
+
+  const calcAvg = (arr: GasPrice[], field: keyof GasPrice) => {
+    const valid = arr.filter((d) => typeof d[field] === 'number' && (d[field] as number) > 0);
+    if (valid.length === 0) return 0;
+    return valid.reduce((s, d) => s + (d[field] as number), 0) / valid.length;
+  };
+
+  const calcTotalPostos = (arr: GasPrice[]) => {
+    // Get unique state entries from the most recent week
+    const latestDate = Math.max(...arr.map((d) => d.dataInicial.getTime()));
+    const cutoff = latestDate - 7 * 24 * 60 * 60 * 1000;
+    const latest = arr.filter((d) => d.dataInicial.getTime() >= cutoff);
+    return latest.reduce((s, d) => s + d.numeroPostos, 0);
+  };
+
+  const amzPreco = calcAvg(amazonData, 'precoMedioRevenda');
+  const natPreco = calcAvg(recentData, 'precoMedioRevenda');
+  const amzMargem = calcAvg(amazonData, 'margemMediaRevenda');
+  const natMargem = calcAvg(recentData, 'margemMediaRevenda');
+  const amzCoef = calcAvg(amazonData, 'coefVariacaoRevenda');
+  const natCoef = calcAvg(recentData, 'coefVariacaoRevenda');
+  const amzPostos = calcTotalPostos(amazonData);
+  const natPostos = calcTotalPostos(recentData);
+  const amzDist = calcAvg(amazonData, 'precoMedioDistribuicao');
+  const natDist = calcAvg(recentData, 'precoMedioDistribuicao');
+
+  const pctDiff = (a: number, n: number) => n > 0 ? ((a - n) / n) * 100 : 0;
+
+  const metrics: AmazonMetrics[] = [
+    { label: 'Precio Medio Reventa', value: amzPreco, national: natPreco, diff: pctDiff(amzPreco, natPreco) },
+    { label: 'Precio Distribucion', value: amzDist, national: natDist, diff: pctDiff(amzDist, natDist) },
+    { label: 'Margen de Ganancia', value: amzMargem, national: natMargem, diff: pctDiff(amzMargem, natMargem) },
+    { label: 'Coef. de Variacion', value: amzCoef, national: natCoef, diff: pctDiff(amzCoef, natCoef) },
+    { label: 'Estaciones Encuestadas', value: amzPostos, national: natPostos, diff: pctDiff(amzPostos, natPostos) },
+  ];
+
+  // Per-state breakdown
+  const stateMap = new Map<
+    string,
+    { postos: number; totalPreco: number; totalMargem: number; totalCoef: number; count: number }
+  >();
+
+  for (const item of amazonData) {
+    const existing = stateMap.get(item.estado);
+    if (existing) {
+      existing.postos += item.numeroPostos;
+      existing.totalPreco += item.precoMedioRevenda;
+      existing.totalMargem += item.margemMediaRevenda;
+      existing.totalCoef += item.coefVariacaoRevenda;
+      existing.count += 1;
+    } else {
+      stateMap.set(item.estado, {
+        postos: item.numeroPostos,
+        totalPreco: item.precoMedioRevenda,
+        totalMargem: item.margemMediaRevenda,
+        totalCoef: item.coefVariacaoRevenda,
+        count: 1,
+      });
+    }
+  }
+
+  const states: AmazonStateDetail[] = Array.from(stateMap.entries())
+    .map(([estado, s]) => ({
+      estado,
+      postos: s.postos,
+      precoMedio: Number((s.totalPreco / s.count).toFixed(3)),
+      margemMedia: Number((s.totalMargem / s.count).toFixed(3)),
+      coefVariacao: Number((s.totalCoef / s.count).toFixed(4)),
+    }))
+    .sort((a, b) => b.precoMedio - a.precoMedio);
+
+  return { metrics, states };
+}
+
 export function getDateRange(data: GasPrice[]): { min: Date; max: Date } {
   const dates = data.map((d) => d.dataInicial.getTime());
   return {

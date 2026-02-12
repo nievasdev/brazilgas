@@ -8,6 +8,7 @@ import PriceChart from '@/components/PriceChart';
 import StationsBarChart from '@/components/StationsBarChart';
 import RegionPriceChart from '@/components/RegionPriceChart';
 import MarginChart from '@/components/MarginChart';
+import AmazonPanel from '@/components/AmazonPanel';
 import {
   loadGasData,
   aggregateByState,
@@ -16,6 +17,7 @@ import {
   getCurrentDistribution,
   aggregateByRegion,
   getMarginsByState,
+  getAmazonAnalysis,
 } from '@/lib/data';
 import { GasPrice, FilterState } from '@/types';
 
@@ -86,6 +88,11 @@ export default function Home() {
     [data, filters.produto]
   );
 
+  const amazonData = useMemo(
+    () => getAmazonAnalysis(data, filters.produto),
+    [data, filters.produto]
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -148,6 +155,10 @@ export default function Home() {
 
         <div className="mb-6">
           <MarginChart data={marginData} />
+        </div>
+
+        <div className="mb-6">
+          <AmazonPanel data={amazonData} />
         </div>
 
         <footer className="mt-8 text-center text-gray-500 text-sm">
