@@ -225,6 +225,50 @@ export function calculateStats(data: GasPrice[], produto?: string) {
   };
 }
 
+export interface StationDistribution {
+  estado: string;
+  postos: number;
+  regiao: string;
+}
+
+export function getCurrentDistribution(
+  data: GasPrice[],
+  produto?: string,
+  regiao?: string
+): StationDistribution[] {
+  let filtered = data;
+
+  if (produto && produto !== 'all') {
+    filtered = filtered.filter((d) => d.produto === produto);
+  }
+
+  if (regiao && regiao !== 'all') {
+    filtered = filtered.filter((d) => d.regiao === regiao);
+  }
+
+  // Find the most recent date in the data
+  const maxDate = Math.max(...filtered.map((d) => d.dataInicial.getTime()));
+  const recentCutoff = maxDate - 7 * 24 * 60 * 60 * 1000; // last week of data
+
+  const recentData = filtered.filter((d) => d.dataInicial.getTime() >= recentCutoff);
+
+  // Aggregate by state, taking the latest entry per state+product
+  const stateMap = new Map<string, { postos: number; regiao: string }>();
+
+  for (const item of recentData) {
+    const existing = stateMap.get(item.estado);
+    if (existing) {
+      existing.postos += item.numeroPostos;
+    } else {
+      stateMap.set(item.estado, { postos: item.numeroPostos, regiao: item.regiao });
+    }
+  }
+
+  return Array.from(stateMap.entries())
+    .map(([estado, { postos, regiao: r }]) => ({ estado, postos, regiao: r }))
+    .sort((a, b) => b.postos - a.postos);
+}
+
 export function getDateRange(data: GasPrice[]): { min: Date; max: Date } {
   const dates = data.map((d) => d.dataInicial.getTime());
   return {
