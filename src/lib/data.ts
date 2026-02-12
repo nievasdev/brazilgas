@@ -309,6 +309,62 @@ export function aggregateByRegion(data: GasPrice[]): RegionPriceData[] {
   });
 }
 
+export interface MarginData {
+  estado: string;
+  regiao: string;
+  margemMedia: number;
+  precoRevenda: number;
+  precoDistribuicao: number;
+}
+
+export function getMarginsByState(
+  data: GasPrice[],
+  produto?: string
+): MarginData[] {
+  // Use most recent year of data
+  const maxDate = Math.max(...data.map((d) => d.dataInicial.getTime()));
+  const oneYearAgo = maxDate - 365 * 24 * 60 * 60 * 1000;
+  let recentData = data.filter((d) => d.dataInicial.getTime() >= oneYearAgo);
+
+  if (produto && produto !== 'all') {
+    recentData = recentData.filter((d) => d.produto === produto);
+  }
+
+  const stateMap = new Map<
+    string,
+    { regiao: string; totalMargem: number; totalRevenda: number; totalDist: number; count: number }
+  >();
+
+  for (const item of recentData) {
+    if (item.margemMediaRevenda <= 0) continue;
+    const existing = stateMap.get(item.estado);
+    if (existing) {
+      existing.totalMargem += item.margemMediaRevenda;
+      existing.totalRevenda += item.precoMedioRevenda;
+      existing.totalDist += item.precoMedioDistribuicao;
+      existing.count += 1;
+    } else {
+      stateMap.set(item.estado, {
+        regiao: item.regiao,
+        totalMargem: item.margemMediaRevenda,
+        totalRevenda: item.precoMedioRevenda,
+        totalDist: item.precoMedioDistribuicao,
+        count: 1,
+      });
+    }
+  }
+
+  return Array.from(stateMap.entries())
+    .map(([estado, s]) => ({
+      estado,
+      regiao: s.regiao,
+      margemMedia: Number((s.totalMargem / s.count).toFixed(3)),
+      precoRevenda: Number((s.totalRevenda / s.count).toFixed(3)),
+      precoDistribuicao: Number((s.totalDist / s.count).toFixed(3)),
+    }))
+    .sort((a, b) => b.margemMedia - a.margemMedia);
+}
+
 export function getDateRange(data: GasPrice[]): { min: Date; max: Date } {
   const dates = data.map((d) => d.dataInicial.getTime());
   return {
