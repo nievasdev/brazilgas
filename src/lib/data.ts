@@ -269,6 +269,46 @@ export function getCurrentDistribution(
     .sort((a, b) => b.postos - a.postos);
 }
 
+export interface RegionPriceData {
+  regiao: string;
+  [produto: string]: number | string;
+}
+
+export function aggregateByRegion(data: GasPrice[]): RegionPriceData[] {
+  // Use most recent year of data for "current" prices
+  const maxDate = Math.max(...data.map((d) => d.dataInicial.getTime()));
+  const oneYearAgo = maxDate - 365 * 24 * 60 * 60 * 1000;
+  const recentData = data.filter((d) => d.dataInicial.getTime() >= oneYearAgo);
+
+  const regionMap = new Map<
+    string,
+    Map<string, { total: number; count: number }>
+  >();
+
+  for (const item of recentData) {
+    if (!regionMap.has(item.regiao)) {
+      regionMap.set(item.regiao, new Map());
+    }
+    const prodMap = regionMap.get(item.regiao)!;
+    const existing = prodMap.get(item.produto) || { total: 0, count: 0 };
+    prodMap.set(item.produto, {
+      total: existing.total + item.precoMedioRevenda,
+      count: existing.count + 1,
+    });
+  }
+
+  return Array.from(regionMap.entries()).map(([regiao, prodMap]) => {
+    const point: RegionPriceData = { regiao };
+    for (const produto of PRODUTOS) {
+      const stats = prodMap.get(produto);
+      if (stats) {
+        point[produto] = Number((stats.total / stats.count).toFixed(3));
+      }
+    }
+    return point;
+  });
+}
+
 export function getDateRange(data: GasPrice[]): { min: Date; max: Date } {
   const dates = data.map((d) => d.dataInicial.getTime());
   return {

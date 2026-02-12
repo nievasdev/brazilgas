@@ -6,12 +6,14 @@ import Filters from '@/components/Filters';
 import StatsCards from '@/components/StatsCards';
 import PriceChart from '@/components/PriceChart';
 import StationsBarChart from '@/components/StationsBarChart';
+import RegionPriceChart from '@/components/RegionPriceChart';
 import {
   loadGasData,
   aggregateByState,
   aggregateByMonth,
   calculateStats,
   getCurrentDistribution,
+  aggregateByRegion,
 } from '@/lib/data';
 import { GasPrice, FilterState } from '@/types';
 
@@ -72,6 +74,11 @@ export default function Home() {
     [data, filters.produto, filters.regiao]
   );
 
+  const regionPriceData = useMemo(
+    () => aggregateByRegion(data),
+    [data]
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -126,6 +133,10 @@ export default function Home() {
 
         <div className="mb-6">
           <PriceChart data={chartData} selectedProduto={filters.produto} />
+        </div>
+
+        <div className="mb-6">
+          <RegionPriceChart data={regionPriceData} />
         </div>
 
         <footer className="mt-8 text-center text-gray-500 text-sm">
