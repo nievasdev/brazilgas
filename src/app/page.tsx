@@ -116,13 +116,16 @@ export default function Home() {
           produto={filters.produto}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="mb-6">
           <BrazilMap data={stateData} />
-          <PriceChart data={chartData} selectedProduto={filters.produto} />
         </div>
 
-        <div className="mt-6">
+        <div className="mb-6">
           <StationsBarChart data={distributionData} />
+        </div>
+
+        <div className="mb-6">
+          <PriceChart data={chartData} selectedProduto={filters.produto} />
         </div>
 
         <footer className="mt-8 text-center text-gray-500 text-sm">
