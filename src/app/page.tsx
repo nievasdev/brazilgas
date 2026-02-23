@@ -30,6 +30,15 @@ const BrazilMap = dynamic(() => import('@/components/BrazilMap'), {
   ),
 });
 
+const PopulationMap = dynamic(() => import('@/components/PopulationMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-lg shadow p-4 h-[620px] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    </div>
+  ),
+});
+
 export default function Home() {
   const [data, setData] = useState<GasPrice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,8 +146,9 @@ export default function Home() {
           produto={filters.produto}
         />
 
-        <div className="mb-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
           <BrazilMap data={stateData} />
+          <PopulationMap />
         </div>
 
         <div className="mb-6">

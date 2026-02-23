@@ -7,13 +7,8 @@ import {
   Geography,
 } from 'react-simple-maps';
 import { scaleQuantize } from 'd3-scale';
-import { StateData } from '@/types';
-import { BRAZIL_GEO_URL } from '@/lib/constants';
+import { BRAZIL_GEO_URL, STATE_POPULATION } from '@/lib/constants';
 import type { Geography as GeoType } from 'react-simple-maps';
-
-interface BrazilMapProps {
-  data: StateData[];
-}
 
 interface TooltipState {
   visible: boolean;
@@ -21,12 +16,11 @@ interface TooltipState {
   y: number;
   content: {
     name: string;
-    postos: number;
-    preco: number;
+    poblacion: number;
   } | null;
 }
 
-export default function BrazilMap({ data }: BrazilMapProps) {
+export default function PopulationMap() {
   const [geoData, setGeoData] = useState<unknown>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
@@ -42,53 +36,49 @@ export default function BrazilMap({ data }: BrazilMapProps) {
       .catch(console.error);
   }, []);
 
-  const maxPostos = useMemo(() => {
-    return Math.max(...data.map((d) => d.totalPostos), 1);
-  }, [data]);
+  const maxPop = useMemo(() => {
+    return Math.max(...Object.values(STATE_POPULATION));
+  }, []);
 
   const colorScale = useMemo(() => {
     return scaleQuantize<string>()
-      .domain([0, maxPostos])
+      .domain([0, maxPop])
       .range([
-        '#FFEF5E', // amarillo claro
-        '#FFD600', // amarillo bandera Brasil
-        '#ADDE6C', // verde amarillento
-        '#00C44F', // verde medio
-        '#009c3b', // verde bandera Brasil
-        '#007A2F', // verde oscuro
-        '#004A8F', // azul medio
-        '#002776', // azul bandera Brasil
+        '#FFF3E0', // casi blanco anaranjado
+        '#FFCC80', // naranja claro
+        '#FFA726', // naranja
+        '#FF7043', // naranja rojizo
+        '#F4511E', // rojo naranja
+        '#D84315', // rojo oscuro
+        '#7B1FA2', // violeta
+        '#4A148C', // violeta oscuro
       ]);
-  }, [maxPostos]);
+  }, [maxPop]);
 
-  const getStateData = (geoName: string): StateData | undefined => {
-    const normalizedName = geoName
+  const getStateName = (geoName: string): string => {
+    return geoName
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toUpperCase();
-    return data.find((d) => d.estado === normalizedName);
+  };
+
+  const getPopulation = (geoName: string): number | undefined => {
+    return STATE_POPULATION[getStateName(geoName)];
   };
 
   const handleMouseMove = (
     e: React.MouseEvent,
     geo: { properties: { name: string } }
   ) => {
-    const stateData = getStateData(geo.properties.name);
+    const pop = getPopulation(geo.properties.name);
     setTooltip({
       visible: true,
       x: e.clientX,
       y: e.clientY,
-      content: stateData
-        ? {
-            name: geo.properties.name,
-            postos: stateData.totalPostos,
-            preco: stateData.precoMedio,
-          }
-        : {
-            name: geo.properties.name,
-            postos: 0,
-            preco: 0,
-          },
+      content: {
+        name: geo.properties.name,
+        poblacion: pop ?? 0,
+      },
     });
   };
 
@@ -99,7 +89,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
   if (!geoData) {
     return (
       <div className="bg-white rounded-lg shadow p-4 h-[620px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -107,7 +97,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4 h-[620px] relative">
       <h3 className="text-lg font-semibold text-gray-800 mb-2">
-        Distribucion de Estaciones por Estado
+        Población por Estado (IBGE 2021)
       </h3>
       <ComposableMap
         projection="geoMercator"
@@ -120,17 +110,17 @@ export default function BrazilMap({ data }: BrazilMapProps) {
         <Geographies geography={geoData}>
           {({ geographies }: { geographies: GeoType[] }) =>
             geographies.map((geo: GeoType) => {
-              const stateData = getStateData(geo.properties.name);
+              const pop = getPopulation(geo.properties.name);
               return (
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill={stateData ? colorScale(stateData.totalPostos) : '#d1e8c2'}
+                  fill={pop !== undefined ? colorScale(pop) : '#f5f5f5'}
                   stroke="#fff"
                   strokeWidth={0.8}
                   style={{
                     default: { outline: 'none' },
-                    hover: { outline: 'none', fill: '#FF6B00' },
+                    hover: { outline: 'none', fill: '#009c3b' },
                     pressed: { outline: 'none' },
                   }}
                   onMouseMove={(e: React.MouseEvent) => handleMouseMove(e, geo)}
@@ -151,19 +141,20 @@ export default function BrazilMap({ data }: BrazilMapProps) {
           }}
         >
           <p className="font-semibold">{tooltip.content.name}</p>
-          <p>Estaciones: {tooltip.content.postos.toLocaleString()}</p>
           <p>
-            Precio Prom: R${' '}
-            {tooltip.content.preco > 0 ? tooltip.content.preco.toFixed(2) : 'N/A'}
+            Población:{' '}
+            {tooltip.content.poblacion > 0
+              ? tooltip.content.poblacion.toLocaleString('pt-BR')
+              : 'N/A'}
           </p>
         </div>
       )}
 
       <div className="absolute bottom-4 left-4 bg-white/90 p-2 rounded text-xs">
-        <p className="font-medium text-gray-700 mb-1">Escala de Estaciones</p>
+        <p className="font-medium text-gray-700 mb-1">Escala de Población</p>
         <div className="flex items-center gap-1">
           <span className="text-gray-500">Menos</span>
-          {['#FFEF5E', '#FFD600', '#ADDE6C', '#00C44F', '#009c3b', '#007A2F', '#004A8F', '#002776'].map(
+          {['#FFF3E0', '#FFCC80', '#FFA726', '#FF7043', '#F4511E', '#D84315', '#7B1FA2', '#4A148C'].map(
             (color) => (
               <div
                 key={color}
@@ -172,7 +163,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
               />
             )
           )}
-          <span className="text-gray-500">Mas</span>
+          <span className="text-gray-500">Más</span>
         </div>
       </div>
     </div>
