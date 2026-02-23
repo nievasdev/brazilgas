@@ -44,14 +44,14 @@ export default function PopulationMap() {
     return scaleQuantize<string>()
       .domain([0, maxPop])
       .range([
-        '#FFF3E0', // casi blanco anaranjado
-        '#FFCC80', // naranja claro
-        '#FFA726', // naranja
-        '#FF7043', // naranja rojizo
-        '#F4511E', // rojo naranja
-        '#D84315', // rojo oscuro
-        '#7B1FA2', // violeta
+        '#FFD600', // amarillo fuerte
+        '#FF9100', // naranja vivo
+        '#FF5722', // naranja rojizo
+        '#E53935', // rojo
+        '#C62828', // rojo oscuro
+        '#880E4F', // fucsia oscuro
         '#4A148C', // violeta oscuro
+        '#1A0033', // casi negro violeta
       ]);
   }, [maxPop]);
 
@@ -154,7 +154,7 @@ export default function PopulationMap() {
         <p className="font-medium text-gray-700 mb-1">Escala de Población</p>
         <div className="flex items-center gap-1">
           <span className="text-gray-500">Menos</span>
-          {['#FFF3E0', '#FFCC80', '#FFA726', '#FF7043', '#F4511E', '#D84315', '#7B1FA2', '#4A148C'].map(
+          {['#FFD600', '#FF9100', '#FF5722', '#E53935', '#C62828', '#880E4F', '#4A148C', '#1A0033'].map(
             (color) => (
               <div
                 key={color}
