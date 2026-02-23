@@ -50,14 +50,14 @@ export default function BrazilMap({ data }: BrazilMapProps) {
     return scaleQuantize<string>()
       .domain([0, maxPostos])
       .range([
-        '#f7fafc',
-        '#e2e8f0',
-        '#cbd5e1',
-        '#94a3b8',
-        '#64748b',
-        '#475569',
-        '#334155',
-        '#1e293b',
+        '#FFEF5E', // amarillo claro
+        '#FFD600', // amarillo bandera Brasil
+        '#ADDE6C', // verde amarillento
+        '#00C44F', // verde medio
+        '#009c3b', // verde bandera Brasil
+        '#007A2F', // verde oscuro
+        '#004A8F', // azul medio
+        '#002776', // azul bandera Brasil
       ]);
   }, [maxPostos]);
 
@@ -125,12 +125,12 @@ export default function BrazilMap({ data }: BrazilMapProps) {
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill={stateData ? colorScale(stateData.totalPostos) : '#f1f5f9'}
+                  fill={stateData ? colorScale(stateData.totalPostos) : '#d1e8c2'}
                   stroke="#fff"
-                  strokeWidth={0.5}
+                  strokeWidth={0.8}
                   style={{
                     default: { outline: 'none' },
-                    hover: { outline: 'none', fill: '#3b82f6' },
+                    hover: { outline: 'none', fill: '#FF6B00' },
                     pressed: { outline: 'none' },
                   }}
                   onMouseMove={(e: React.MouseEvent) => handleMouseMove(e, geo)}
@@ -163,7 +163,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
         <p className="font-medium text-gray-700 mb-1">Escala de Estaciones</p>
         <div className="flex items-center gap-1">
           <span className="text-gray-500">Menos</span>
-          {['#f7fafc', '#cbd5e1', '#94a3b8', '#64748b', '#334155', '#1e293b'].map(
+          {['#FFEF5E', '#FFD600', '#ADDE6C', '#00C44F', '#009c3b', '#007A2F', '#004A8F', '#002776'].map(
             (color) => (
               <div
                 key={color}
