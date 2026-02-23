@@ -24,7 +24,7 @@ import { GasPrice, FilterState } from '@/types';
 const BrazilMap = dynamic(() => import('@/components/BrazilMap'), {
   ssr: false,
   loading: () => (
-    <div className="bg-white rounded-lg shadow p-4 h-[400px] flex items-center justify-center">
+    <div className="bg-white rounded-lg shadow p-4 h-[620px] flex items-center justify-center">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
     </div>
   ),

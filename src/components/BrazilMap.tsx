@@ -98,24 +98,24 @@ export default function BrazilMap({ data }: BrazilMapProps) {
 
   if (!geoData) {
     return (
-      <div className="bg-white rounded-lg shadow p-4 h-[400px] flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow p-4 h-[620px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 h-[400px] relative">
+    <div className="bg-white rounded-lg shadow p-4 h-[620px] relative">
       <h3 className="text-lg font-semibold text-gray-800 mb-2">
         Distribucion de Estaciones por Estado
       </h3>
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
-          scale: 650,
+          scale: 900,
           center: [-55, -15],
         }}
-        style={{ width: '100%', height: '90%' }}
+        style={{ width: '100%', height: '92%' }}
       >
         <Geographies geography={geoData}>
           {({ geographies }: { geographies: GeoType[] }) =>
