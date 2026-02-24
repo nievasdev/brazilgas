@@ -40,11 +40,14 @@ export default function PopulationMap() {
     return Math.max(...Object.values(STATE_POPULATION));
   }, []);
 
+  const minPop = useMemo(() => {
+    return Math.min(...Object.values(STATE_POPULATION));
+  }, []);
+
   const colorScale = useMemo(() => {
     return scaleQuantize<string>()
       .domain([0, maxPop])
       .range([
-        '#FFD600', // amarillo fuerte
         '#FF9100', // naranja vivo
         '#FF5722', // naranja rojizo
         '#E53935', // rojo
@@ -153,8 +156,8 @@ export default function PopulationMap() {
       <div className="absolute bottom-4 left-4 bg-white/90 p-2 rounded text-xs">
         <p className="font-medium text-gray-700 mb-1">Escala de Población</p>
         <div className="flex items-center gap-1">
-          <span className="text-gray-500">Menos</span>
-          {['#FFD600', '#FF9100', '#FF5722', '#E53935', '#C62828', '#880E4F', '#4A148C', '#1A0033'].map(
+          <span className="text-gray-600 font-medium">{minPop.toLocaleString('pt-BR')}</span>
+          {['#FF9100', '#FF5722', '#E53935', '#C62828', '#880E4F', '#4A148C', '#1A0033'].map(
             (color) => (
               <div
                 key={color}
@@ -163,7 +166,7 @@ export default function PopulationMap() {
               />
             )
           )}
-          <span className="text-gray-500">Más</span>
+          <span className="text-gray-600 font-medium">{maxPop.toLocaleString('pt-BR')}</span>
         </div>
       </div>
     </div>
