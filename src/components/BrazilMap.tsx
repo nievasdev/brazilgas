@@ -46,6 +46,10 @@ export default function BrazilMap({ data }: BrazilMapProps) {
     return Math.max(...data.map((d) => d.totalPostos), 1);
   }, [data]);
 
+  const minPostos = useMemo(() => {
+    return Math.min(...data.map((d) => d.totalPostos));
+  }, [data]);
+
   const colorScale = useMemo(() => {
     return scaleQuantize<string>()
       .domain([0, maxPostos])
@@ -162,7 +166,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
       <div className="absolute bottom-4 left-4 bg-white/90 p-2 rounded text-xs">
         <p className="font-medium text-gray-700 mb-1">Escala de Estaciones</p>
         <div className="flex items-center gap-1">
-          <span className="text-gray-500">Menos</span>
+          <span className="text-gray-600 font-medium">{minPostos.toLocaleString('pt-BR')}</span>
           {['#FFEF5E', '#FFD600', '#ADDE6C', '#00C44F', '#009c3b', '#007A2F', '#004A8F', '#002776'].map(
             (color) => (
               <div
@@ -172,7 +176,7 @@ export default function BrazilMap({ data }: BrazilMapProps) {
               />
             )
           )}
-          <span className="text-gray-500">Mas</span>
+          <span className="text-gray-600 font-medium">{maxPostos.toLocaleString('pt-BR')}</span>
         </div>
       </div>
     </div>
